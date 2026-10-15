@@ -1,0 +1,22 @@
+cabal-version: 2.4
+name: lantern-http
+version: 0.1.0
+synopsis: Strict incremental HTTP/1 wire protocol library
+license: MIT
+license-file: LICENSE
+build-type: Simple
+
+library
+  hs-source-dirs: src
+  exposed-modules: Lantern.HTTP
+  build-depends: base >=4.18 && <5, bytestring
+  ghc-options: -Wall -Wcompat -O2
+  default-language: Haskell2010
+
+test-suite protocol
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is: Protocol.hs
+  build-depends: base, lantern-http, bytestring, QuickCheck
+  ghc-options: -Wall
+  default-language: Haskell2010
