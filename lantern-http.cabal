@@ -8,8 +8,8 @@ build-type: Simple
 
 library
   hs-source-dirs: src
-  exposed-modules: Lantern.HTTP
-  build-depends: base >=4.18 && <5, bytestring
+  exposed-modules: Lantern.HTTP, Lantern.HTTP.Representation
+  build-depends: base >=4.18 && <5, bytestring, time
   ghc-options: -Wall -Wcompat -O2
   default-language: Haskell2010
 
@@ -18,5 +18,13 @@ test-suite protocol
   hs-source-dirs: test
   main-is: Protocol.hs
   build-depends: base, lantern-http, bytestring, QuickCheck
+  ghc-options: -Wall
+  default-language: Haskell2010
+
+test-suite representation
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is: Representation.hs
+  build-depends: base, lantern-http, bytestring, time, QuickCheck
   ghc-options: -Wall
   default-language: Haskell2010

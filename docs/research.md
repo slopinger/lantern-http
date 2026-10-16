@@ -1,6 +1,6 @@
 # HTTP research and implementation decisions
 
-Reviewed 2026-10-15. This is a record of source-driven design and local tests,
+Reviewed 2026-10-16. This is a record of source-driven design and local tests,
 not a security certification. Protocol behavior lives in this repository, rather
 than in Warp, WAI, http-client, or an operating-system HTTP service.
 
@@ -59,6 +59,37 @@ No formally verified grammar, coverage-guided native fuzzer, independent audit,
 HTTP/2, upgrade/tunnel support, or generic URI parser. Chunk extensions are treated
 as bounded printable opaque metadata, a narrower validation effort than the full
 extension grammar. Trailers are discarded after validation. Callers must never
-merge them into request headers. Cookie/authentication policy and cache semantics
+merge them into request headers. Cookie/authentication policy, cache storage and validator generation
 remain application responsibilities. Never expose a successful test count as a
 security guarantee.
+
+## Conditional and partial representations
+
+[RFC 9110 sections 8.8, 13 and 14](https://www.rfc-editor.org/rfc/rfc9110.html)
+were checked for precondition ordering, weak/strong comparisons, date formats,
+If-Range exact matching, and byte-range syntax. The API treats these as separate
+steps so a 304/412 decision precedes range processing. Empty entity-tag lists are
+valid; quoted commas remain inside tags. Dates use the standard time primitives
+with our HTTP syntax/obsolete-year handling. Invalid or repeated date fields are
+ignored. Invalid tag syntax is reported to the application.
+
+Our range policy caps comma elements at 16 and tag/empty-element counts at 128.
+Numeric validation compares arbitrary-width decimal strings, then clamps arithmetic
+to representation size plus one. Overlap/adjacency coalescing prevents duplicate
+file-byte amplification. A zero-length file with a nonzero suffix range is
+satisfiable; our policy ignores that range and returns the empty representation.
+Unknown/invalid range syntax is also ignored; excessive or wholly unsatisfiable
+range sets yield a rejection result. These are explicit server policy choices.
+
+Boundary/media validation and exact multipart lengths keep response framing
+independent of file reads. Strong validators can authorize If-Range; callers must
+not label metadata-only validators strong without evidence. Last-Modified dates
+are not implicitly strong. The Lantern server uses conservative weak metadata
+tags to avoid a whole-file hash on a large-file request.
+
+Tests include precondition precedence, weak and strong validators, quoted commas,
+obsolete dates and the 50-year rule, huge decimal offsets, empty representations,
+range ordering/coalescing and multipart injection rejection. Generated cases compare
+normalized range coverage with an independent per-byte oracle and check encoded
+body lengths. The server repo separately verifies actual files, keep-alive framing,
+TLS, atomic publication races, HEAD, 304, 412 and 416 responses.

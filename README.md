@@ -1,7 +1,7 @@
 # lantern-http
 
 An independent, experimental HTTP/1 wire library written in Haskell. Runtime
-dependencies: `base` and `bytestring`. There is no HTTP server/client framework
+dependencies: `base`, `bytestring`, and `time`. There is no HTTP server/client framework
 underneath it. MIT licensed. Used by [Lantern](https://git.freifick.net/slop/lantern).
 
 ```haskell
@@ -40,5 +40,22 @@ nix develop -c cabal test --offline
 ```
 
 The tests exercise 128 fragmentation widths, pipelining, framing regressions,
-upstream heads, and 8,000 randomized properties. These checks are not an audit or
+upstream heads, 8,000 wire properties, and 3,000 representation/range properties. These checks are not an audit or
 proof of complete RFC conformance. See [research and threat model](docs/research.md).
+
+`Lantern.HTTP.Representation` provides bounded entity-tag parsing, HTTP dates
+(including both obsolete forms and the 50-year rule), ordered precondition
+checks, byte-range selection, coalescing, and multipart prefixes/exact lengths.
+It accepts validators for an existing representation and normalized header names;
+callers own file metadata, validator strength, body I/O, and boundary entropy.
+Supply `modifiedAt` at whole-second HTTP precision. If-Match uses strong comparison;
+If-None-Match uses weak comparison. If-Range requires a matching strong validator.
+
+Range decimals are processed without machine-integer overflow. Unknown/malformed
+ranges fall back to the full response; unsatisfiable or excessive requests are
+rejected. At most 16 comma-separated range elements are accepted, overlaps and
+adjacency are coalesced, and disjoint groups retain first-requested order. HEAD
+ignores Range. Preconditions must be evaluated before `selectRanges`. Multipart
+writers validate boundaries/media metadata and return an exact length without
+buffering representation data. Callers stream each prefix, the chosen file bytes,
+CRLF, then the closing delimiter.

@@ -250,7 +250,7 @@ reason s = case s of
   200 -> "OK"; 201 -> "Created"; 204 -> "No Content"; 206 -> "Partial Content"
   301 -> "Moved Permanently"; 302 -> "Found"; 304 -> "Not Modified"; 308 -> "Permanent Redirect"
   400 -> "Bad Request"; 403 -> "Forbidden"; 404 -> "Not Found"; 405 -> "Method Not Allowed"
-  408 -> "Request Timeout"; 413 -> "Content Too Large"; 417 -> "Expectation Failed"
+  408 -> "Request Timeout"; 412 -> "Precondition Failed"; 416 -> "Range Not Satisfiable"; 413 -> "Content Too Large"; 417 -> "Expectation Failed"
   421 -> "Misdirected Request"; 431 -> "Request Header Fields Too Large"
   500 -> "Internal Server Error"; 501 -> "Not Implemented"; 502 -> "Bad Gateway"
   503 -> "Service Unavailable"; 504 -> "Gateway Timeout"; 505 -> "HTTP Version Not Supported"
