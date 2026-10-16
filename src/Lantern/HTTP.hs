@@ -148,12 +148,15 @@ readRequest r = do
 
 -- URI syntax is validated before a proxy forwards it to a second parser.
 validTarget :: B.ByteString -> Bool
-validTarget = go . B.unpack
+validTarget bytes = go 0
   where
-    go [] = True
-    go (37:a:b:xs) = hex a && hex b && go xs
-    go (37:_) = False
-    go (c:xs) = (alphaNum c || c `B.elem` "/?:@!$&'()*+,;=-._~[]") && go xs
+    size = B.length bytes
+    go offset
+      | offset == size = True
+      | current == 37 = offset + 2 < size && hex (B.index bytes (offset+1)) &&
+                        hex (B.index bytes (offset+2)) && go (offset+3)
+      | otherwise = (alphaNum current || current `B.elem` "/?:@!$&'()*+,;=-._~[]") && go (offset+1)
+      where current = B.index bytes offset
     alphaNum c = (c >= 48 && c <= 57) || (c >= 65 && c <= 90) || (c >= 97 && c <= 122)
     hex c = (c >= 48 && c <= 57) || (c >= 65 && c <= 70) || (c >= 97 && c <= 102)
 

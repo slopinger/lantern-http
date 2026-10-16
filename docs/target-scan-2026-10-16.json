@@ -1,0 +1,182 @@
+{
+  "date": "2026-10-16",
+  "baseline_commit": "c9a0b57b0164241fae03d6f8abaa38d9288c81f7",
+  "after_source_sha256": "5569d38e6834f0cc20fdd7ec14536ea94a506a2d6ad5d29c4750afd84ea02cb9",
+  "benchmark_sha256": "07e020b03fbccba7f5e9f13a541e3cde1efc71fac7d1797441068fc89cfc2f68",
+  "compiler": "GHC 9.10.3",
+  "build": "cabal bench fragmented --offline --enable-optimization=2",
+  "rts": "+RTS -T -RTS",
+  "scope": "fixed 8135-byte request, process CPU and total RTS allocation; no sockets/TLS, peak-memory or ordinary-server throughput measurement",
+  "initial_after": [
+    {
+      "width": 1,
+      "requests": 100,
+      "wire_bytes": 8135,
+      "allocated_bytes": 157079776,
+      "cpu_seconds": 0.073202101
+    },
+    {
+      "width": 128,
+      "requests": 1000,
+      "wire_bytes": 8135,
+      "allocated_bytes": 21673928,
+      "cpu_seconds": 0.084547571
+    },
+    {
+      "width": 16384,
+      "requests": 10000,
+      "wire_bytes": 8135,
+      "allocated_bytes": 13204144,
+      "cpu_seconds": 0.73583366
+    }
+  ],
+  "trials": [
+    {
+      "trial": 1,
+      "before": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 189872576,
+          "cpu_seconds": 0.074492881
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 349601928,
+          "cpu_seconds": 0.107382079
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3292484144,
+          "cpu_seconds": 1.038379602
+        }
+      ],
+      "after": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 157079776,
+          "cpu_seconds": 0.071070955
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 21673928,
+          "cpu_seconds": 0.081478566
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 13204144,
+          "cpu_seconds": 0.737322921
+        }
+      ]
+    },
+    {
+      "trial": 2,
+      "before": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 189872576,
+          "cpu_seconds": 0.077145991
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 349601928,
+          "cpu_seconds": 0.1100228
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3292484144,
+          "cpu_seconds": 1.067325591
+        }
+      ],
+      "after": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 157079776,
+          "cpu_seconds": 0.072982034
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 21673928,
+          "cpu_seconds": 0.080701971
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 13204144,
+          "cpu_seconds": 0.724111507
+        }
+      ]
+    },
+    {
+      "trial": 3,
+      "before": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 189872576,
+          "cpu_seconds": 0.074425678
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 349601928,
+          "cpu_seconds": 0.107707589
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3292484144,
+          "cpu_seconds": 1.029983864
+        }
+      ],
+      "after": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 157079776,
+          "cpu_seconds": 0.077031672
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 21673928,
+          "cpu_seconds": 0.084627995
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 13204144,
+          "cpu_seconds": 0.747152403
+        }
+      ]
+    }
+  ]
+}

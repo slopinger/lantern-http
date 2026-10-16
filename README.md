@@ -41,7 +41,7 @@ nix develop -c cabal test --offline
 ```
 
 The tests exercise 128 fragmentation widths, pipelining, framing regressions,
-upstream heads, 9,000 wire properties, and 3,000 representation/range properties. These checks are not an audit or
+upstream heads, 12,000 wire properties, and 3,000 representation/range properties. These checks are not an audit or
 proof of complete RFC conformance. See [research and threat model](docs/research.md).
 
 `Lantern.HTTP.Representation` provides bounded entity-tag parsing, HTTP dates
@@ -75,3 +75,8 @@ nix develop -c cabal bench fragmented --offline --enable-optimization=2 --benchm
 The helper verifies parsed results before reporting process CPU time and RTS
 allocation. See [the observations](docs/fragmentation.md) and complete raw trials;
 this is a long-line parser workload, not a server throughput result.
+
+Request-target validation scans the original ByteString with checked indices,
+avoiding a per-byte list while retaining the same grammar and raw escapes.
+[Target-scan measurements](docs/target-scan.md) use the existing long-request
+helper and retain every before/after trial.

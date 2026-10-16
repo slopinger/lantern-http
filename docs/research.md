@@ -112,3 +112,19 @@ the connection. Tests cover exact and overflowing line sizes, split delimiters,
 bare newlines, bodies, following requests and generated irregular splits.
 [Measured CPU/allocation observations](fragmentation.md) are scoped to this
 parser experiment; resource deadlines/admission remain the server's job.
+
+## Target validation without a byte list (2026-10-16)
+
+[RFC 3986 section 2.1](https://www.rfc-editor.org/rfc/rfc3986.html#section-2.1)
+defines percent encoding with two hexadecimal digits. Lantern's existing target
+profile is retained; this change does not expand it or claim complete generic URI
+conformance. The validator walks the original bytes by index, checks the end
+before each access, and checks both percent bytes before advancing three places.
+It never decodes escapes or rewrites the target. The previous list-based policy
+is retained as a test oracle for acceptance and exact target preservation.
+
+Single-byte suffix enumeration, valid/invalid/truncated escapes and 3000 generated
+fragmented requests complement existing line-limit/body/pipeline tests. Those
+long target tests now use a varied pattern to expose ordering mistakes.
+[The unchanged benchmark helper](target-scan.md) measures the allocation removed
+from long targets and records every alternating trial, with explicit scope limits.

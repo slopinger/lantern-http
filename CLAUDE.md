@@ -19,9 +19,18 @@
   preserve unread pipeline bytes and bare-newline rejection. Failure/cancellation
   still requires connection closure. Do not reintroduce repeated prefix copying.
 - Protocol tests now include exact/overflow line limits, CR/LF boundaries and
-  1000 generated long-request/body/pipeline comparisons (9000 wire properties
+  1000 generated long-request/body/pipeline comparisons (12000 wire properties
   plus 3000 representation properties in total).
 - `cabal bench fragmented --offline --enable-optimization=2` with benchmark options
   `+RTS -T -RTS` measures deterministic parser CPU/allocation. docs/fragmentation.md
   and its JSON preserve before/after/control/prototype observations. No network,
   peak-memory or general server throughput claim follows from these samples.
+
+- Request-target validation is a bounds-checked ByteString index loop, preserving
+  the previous grammar and raw percent escapes. Do not decode/normalize here.
+  The previous list grammar is a separate test oracle: every one-byte suffix,
+  percent edges and 3000 generated fragmented cases. Long request/pipeline tests
+  use varied target bytes. Totals: 12000 wire + 3000 representation properties.
+  docs/target-scan.md and JSON preserve three alternating revision pairs using
+  the unchanged benchmark helper. These are long-target parser CPU/allocation
+  observations, not ordinary-request/whole-server throughput or peak memory.
