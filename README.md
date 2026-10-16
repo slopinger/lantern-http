@@ -15,8 +15,9 @@ sendBytes "ok"
 `receiveBytes` supplies bounded chunks and returns empty bytes at EOF. One reader
 belongs to one connection and preserves unread pipelined bytes. Do not use it
 concurrently. Callers own transport, absolute deadlines, admission limits, Host
-routing, and connection closure. After any `ProtocolError`, close the connection;
-never resume parsing it. Header names are normalized to lowercase.
+routing, and connection closure. After a parse failure (including `ProtocolError`)
+or cancellation, close the connection; never resume parsing it. Header names are
+normalized to lowercase.
 
 `readBody` streams decoded fixed/chunked/close-delimited bodies to a callback.
 `collectBody` is for bounded request bodies. `readResponse` skips at most eight
@@ -40,7 +41,7 @@ nix develop -c cabal test --offline
 ```
 
 The tests exercise 128 fragmentation widths, pipelining, framing regressions,
-upstream heads, 8,000 wire properties, and 3,000 representation/range properties. These checks are not an audit or
+upstream heads, 9,000 wire properties, and 3,000 representation/range properties. These checks are not an audit or
 proof of complete RFC conformance. See [research and threat model](docs/research.md).
 
 `Lantern.HTTP.Representation` provides bounded entity-tag parsing, HTTP dates
@@ -59,3 +60,18 @@ ignores Range. Preconditions must be evaluated before `selectRanges`. Multipart
 writers validate boundaries/media metadata and return an exact length without
 buffering representation data. Callers stream each prefix, the chosen file bytes,
 CRLF, then the closing delimiter.
+
+Line parsing searches only newly received fragments plus the possible CR/LF
+boundary, then concatenates once after checking the byte limit. Fragment metadata
+is bounded by the pending line bytes because each receive must be nonempty.
+Complete lines already in one buffer retain their slice path.
+
+To reproduce the CPU/allocation experiment (no sockets or TLS):
+
+```sh
+nix develop -c cabal bench fragmented --offline --enable-optimization=2 --benchmark-options='+RTS -T -RTS'
+```
+
+The helper verifies parsed results before reporting process CPU time and RTS
+allocation. See [the observations](docs/fragmentation.md) and complete raw trials;
+this is a long-line parser workload, not a server throughput result.

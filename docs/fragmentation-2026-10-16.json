@@ -1,0 +1,403 @@
+{
+  "date": "2026-10-16",
+  "scope": "CPU/allocation of parsing one 8135-byte request, not network throughput or peak memory",
+  "baseline_commit": "b2d8ccb72e9ad1f1f6c408a6e60a68a5e1499874",
+  "after_source_sha256": "bc11048d9d0a55589701a672b1c6007e3a3293586cbdbbda9fc1ae0463289da0",
+  "benchmark_sha256": "07e020b03fbccba7f5e9f13a541e3cde1efc71fac7d1797441068fc89cfc2f68",
+  "compiler": "GHC 9.10.3",
+  "build": "cabal bench fragmented --offline --enable-optimization=2",
+  "rts": "+RTS -T -RTS",
+  "initial": {
+    "before": [
+      {
+        "width": 1,
+        "requests": 100,
+        "wire_bytes": 8135,
+        "allocated_bytes": 3535841928,
+        "cpu_seconds": 5.350969551
+      },
+      {
+        "width": 128,
+        "requests": 1000,
+        "wire_bytes": 8135,
+        "allocated_bytes": 611190776,
+        "cpu_seconds": 0.524103929
+      },
+      {
+        "width": 16384,
+        "requests": 10000,
+        "wire_bytes": 8135,
+        "allocated_bytes": 3292004128,
+        "cpu_seconds": 1.008371606
+      }
+    ],
+    "after": [
+      {
+        "width": 1,
+        "requests": 100,
+        "wire_bytes": 8135,
+        "allocated_bytes": 189890976,
+        "cpu_seconds": 0.074070703
+      },
+      {
+        "width": 128,
+        "requests": 1000,
+        "wire_bytes": 8135,
+        "allocated_bytes": 349561928,
+        "cpu_seconds": 0.109373245
+      },
+      {
+        "width": 16384,
+        "requests": 10000,
+        "wire_bytes": 8135,
+        "allocated_bytes": 3292884144,
+        "cpu_seconds": 1.040762176
+      }
+    ],
+    "baseline_control_build": [
+      {
+        "width": 1,
+        "requests": 100,
+        "wire_bytes": 8135,
+        "allocated_bytes": 3535841928,
+        "cpu_seconds": 5.492412161
+      },
+      {
+        "width": 128,
+        "requests": 1000,
+        "wire_bytes": 8135,
+        "allocated_bytes": 611190776,
+        "cpu_seconds": 0.531799546
+      },
+      {
+        "width": 16384,
+        "requests": 10000,
+        "wire_bytes": 8135,
+        "allocated_bytes": 3292004128,
+        "cpu_seconds": 1.025298958
+      }
+    ],
+    "final_build": [
+      {
+        "width": 1,
+        "requests": 100,
+        "wire_bytes": 8135,
+        "allocated_bytes": 189872576,
+        "cpu_seconds": 0.076425247
+      },
+      {
+        "width": 128,
+        "requests": 1000,
+        "wire_bytes": 8135,
+        "allocated_bytes": 349601928,
+        "cpu_seconds": 0.1135886
+      },
+      {
+        "width": 16384,
+        "requests": 10000,
+        "wire_bytes": 8135,
+        "allocated_bytes": 3292484144,
+        "cpu_seconds": 1.04395791
+      }
+    ]
+  },
+  "prototype_source_sha256": "79dd22a2a8dd12ce3e485012fdb77e217456b02e16b1cfdcef773e925894d978",
+  "prototype_trials": [
+    {
+      "trial": 1,
+      "before": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3535841928,
+          "cpu_seconds": 5.894827289
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 611190776,
+          "cpu_seconds": 0.561174108
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3292004128,
+          "cpu_seconds": 1.007636234
+        }
+      ],
+      "after": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 189890976,
+          "cpu_seconds": 0.075137071
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 349561928,
+          "cpu_seconds": 0.108460369
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3292884144,
+          "cpu_seconds": 1.039173444
+        }
+      ]
+    },
+    {
+      "trial": 2,
+      "before": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3535841928,
+          "cpu_seconds": 5.478068393
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 611190776,
+          "cpu_seconds": 0.579146776
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3292004128,
+          "cpu_seconds": 1.05186765
+        }
+      ],
+      "after": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 189890976,
+          "cpu_seconds": 0.076517843
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 349561928,
+          "cpu_seconds": 0.111009904
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3292884144,
+          "cpu_seconds": 1.03344277
+        }
+      ]
+    },
+    {
+      "trial": 3,
+      "before": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3535841928,
+          "cpu_seconds": 5.53103691
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 611190776,
+          "cpu_seconds": 0.592167885
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3292004128,
+          "cpu_seconds": 1.003093007
+        }
+      ],
+      "after": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 189890976,
+          "cpu_seconds": 0.074542882
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 349561928,
+          "cpu_seconds": 0.107063107
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3292884144,
+          "cpu_seconds": 1.022687223
+        }
+      ]
+    }
+  ],
+  "trials": [
+    {
+      "trial": 1,
+      "before": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3535841928,
+          "cpu_seconds": 5.681177043
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 611190776,
+          "cpu_seconds": 0.538519154
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3292004128,
+          "cpu_seconds": 1.039180263
+        }
+      ],
+      "after": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 189872576,
+          "cpu_seconds": 0.074775195
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 349601928,
+          "cpu_seconds": 0.108252547
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3292484144,
+          "cpu_seconds": 1.088613235
+        }
+      ]
+    },
+    {
+      "trial": 2,
+      "before": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3535841928,
+          "cpu_seconds": 5.510306605
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 611190776,
+          "cpu_seconds": 0.55723064
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3292004128,
+          "cpu_seconds": 1.023505378
+        }
+      ],
+      "after": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 189872576,
+          "cpu_seconds": 0.079813787
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 349601928,
+          "cpu_seconds": 0.112039176
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3292484144,
+          "cpu_seconds": 1.055843081
+        }
+      ]
+    },
+    {
+      "trial": 3,
+      "before": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3535841928,
+          "cpu_seconds": 5.451275686
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 611190776,
+          "cpu_seconds": 0.528921297
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3292004128,
+          "cpu_seconds": 1.037235722
+        }
+      ],
+      "after": [
+        {
+          "width": 1,
+          "requests": 100,
+          "wire_bytes": 8135,
+          "allocated_bytes": 189872576,
+          "cpu_seconds": 0.074199453
+        },
+        {
+          "width": 128,
+          "requests": 1000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 349601928,
+          "cpu_seconds": 0.110565734
+        },
+        {
+          "width": 16384,
+          "requests": 10000,
+          "wire_bytes": 8135,
+          "allocated_bytes": 3292484144,
+          "cpu_seconds": 1.061967283
+        }
+      ]
+    }
+  ]
+}

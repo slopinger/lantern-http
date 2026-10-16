@@ -93,3 +93,22 @@ range ordering/coalescing and multipart injection rejection. Generated cases com
 normalized range coverage with an independent per-byte oracle and check encoded
 body lengths. The server repo separately verifies actual files, keep-alive framing,
 TLS, atomic publication races, HEAD, 304, 412 and 416 responses.
+
+## Fragmented line cost (2026-10-16)
+
+[RFC 9112 section 2.2](https://www.rfc-editor.org/rfc/rfc9112.html#section-2.2)
+defines octet-oriented parsing. Our CRLF/size policy must also hold when transport
+reads split any delimiter. The original implementation repeatedly concatenated
+and searched the entire pending prefix, causing quadratic copying/scanning for
+a long byte-at-a-time line. The replacement retains fragments, checks their
+total before concatenation, and searches only newly received bytes plus the
+previous-CR/new-LF boundary. Each pending byte is searched a bounded number of
+times; the completed line is concatenated once and checked for bare CR/LF.
+
+Existing complete buffer slices stay on a direct path. The number of retained
+fragment nodes is bounded by pending bytes (empty receive means EOF); this adds
+metadata per fragment, not an unbounded queue. Error/cancellation still poisons
+the connection. Tests cover exact and overflowing line sizes, split delimiters,
+bare newlines, bodies, following requests and generated irregular splits.
+[Measured CPU/allocation observations](fragmentation.md) are scoped to this
+parser experiment; resource deadlines/admission remain the server's job.

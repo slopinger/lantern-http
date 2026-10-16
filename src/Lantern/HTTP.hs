@@ -59,22 +59,43 @@ decimal s
 
 -- Retains bytes after the delimiter, including a pipelined next request.
 line :: Reader -> Int -> IO B.ByteString
-line (Reader recv ref) limit = go
+line (Reader recv ref) limit = do
+  buf <- readIORef ref
+  if B.null buf then do
+    more <- recv
+    when (B.null more) $ failHTTP 400 "unexpected EOF"
+    scan more
+  else scan buf
   where
-    go = do
-      buf <- readIORef ref
+    scan buf = do
       let (front, rest) = B.breakSubstring "\r\n" buf
-      if not (B.null rest) then do
-        when (B.length front > limit) $ failHTTP 431 "line too large"
-        when (B.any (\c -> c == 10 || c == 13) front) $ failHTTP 400 "bare newline"
-        writeIORef ref (B.drop 2 rest)
-        pure front
+      if not (B.null rest) then finish front (B.drop 2 rest) else do
+        checkPending (B.length buf)
+        gather [buf] (B.length buf) (endsCR buf)
+    finish front rest = do
+      when (B.length front > limit) $ failHTTP 431 "line too large"
+      when (B.any (\c -> c == 10 || c == 13) front) $ failHTTP 400 "bare newline"
+      writeIORef ref rest
+      pure front
+    checkPending size = when (size > limit + 1) $ failHTTP 431 "line too large"
+    endsCR bytes = not (B.null bytes) && B.last bytes == 13
+    -- Search only newly received bytes, plus the possible CR/LF boundary.
+    -- Concatenate once, after checking the complete line's size. Repeated
+    -- prefix append/search would be quadratic for a byte-at-a-time peer.
+    gather pieces size previousCR = do
+      more <- recv
+      when (B.null more) $ failHTTP 400 "unexpected EOF"
+      if previousCR && B.head more == 10 then
+        finish (B.init (B.concat (reverse pieces))) (B.tail more)
       else do
-        when (B.length buf > limit + 1) $ failHTTP 431 "line too large"
-        more <- recv
-        when (B.null more) $ failHTTP 400 "unexpected EOF"
-        writeIORef ref (buf <> more)
-        go
+        let (front,rest) = B.breakSubstring "\r\n" more
+            total = size + B.length front
+        if not (B.null rest) then do
+          when (total > limit) $ failHTTP 431 "line too large"
+          finish (B.concat (reverse (front:pieces))) (B.drop 2 rest)
+        else do
+          checkPending total
+          gather (more:pieces) total (endsCR more)
 
 readHeaders :: Reader -> Int -> Int -> IO Headers
 readHeaders r maxBytes maxCount = go 0 0 []

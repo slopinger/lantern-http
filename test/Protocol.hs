@@ -40,6 +40,29 @@ main = do
     chunkReader <- readerOf n "3;abc=\"yes\"\r\nabc\r\n2\r\nde\r\n0\r\nx-checksum: fine\r\n\r\n"
     decoded <- collectBody chunkReader Chunked 5
     assertTest "chunked fragmentation" (decoded == "abcde")
+  -- Exact line limits and delimiter boundaries must be independent of reads.
+  forM_ [1,2,3,127,8191,8192,16384] $ \width -> do
+    forM_ [8177,8178] $ \padding -> do
+      let target = "/" <> B.replicate padding 97
+          wire = "GET " <> target <> " HTTP/1.1\r\nHost: localhost\r\nX: " <>
+                 B.replicate 8189 98 <> "\r\n\r\n" <> base
+      r <- readerOf width wire
+      parsed <- readRequest r
+      assertTest "exact fragmented line limit" (reqTarget parsed == target)
+      next <- readRequest r
+      assertTest "large fragmented line preserves pipeline" (reqTarget next == "/hello?q=1")
+    r <- readerOf width ("GET /" <> B.replicate 8179 97 <> " HTTP/1.1\r\nHost: localhost\r\n\r\n")
+    outcome <- try (readRequest r)
+    case outcome of
+      Left (ProtocolError status _) -> assertTest "fragmented line overflow status" (status == 431)
+      Right _ -> fail "oversized fragmented line accepted"
+  -- A CR at the end of a fragment is not a delimiter unless the next byte is LF.
+  forM_ ["GET /bad\rX HTTP/1.1\r\nHost: localhost\r\n\r\n",
+         "GET / HTTP/1.1\r\nHost: local\nhost\r\n\r\n"] $ \wire ->
+    forM_ [1..32] $ \width -> do
+      r <- readerOf width wire
+      outcome <- try (readRequest r)
+      case outcome of Left (_ :: ProtocolError) -> pure (); Right _ -> fail "bare newline accepted"
   forM_ [
       ("bare LF","GET / HTTP/1.1\nHost: localhost\n\n"),
       ("space before colon","GET / HTTP/1.1\r\nHost : localhost\r\n\r\n"),
@@ -72,7 +95,9 @@ main = do
   unless (isSuccess result) exitFailure
   result2 <- quickCheckWithResult stdArgs {maxSuccess=5000,maxSize=2000} propNeverCrash
   unless (isSuccess result2) exitFailure
-  putStrLn "protocol regressions passed (128 fragmentation widths, 8000 properties)"
+  result3 <- quickCheckWithResult stdArgs {maxSuccess=1000,maxSize=100} propRequestFragments
+  unless (isSuccess result3) exitFailure
+  putStrLn "protocol regressions passed (128 fragmentation widths, line boundaries, 9000 properties)"
 
 propFragmentation :: Positive Int -> [Word] -> Property
 propFragmentation (Positive n) input = ioProperty $ do
@@ -88,3 +113,22 @@ propNeverCrash input = ioProperty $ do
   case result of
     Left (e :: SomeException) -> pure (case fromException e :: Maybe ProtocolError of Just _ -> True; Nothing -> False)
     Right _ -> pure True
+
+-- Compare long valid requests and a following message against a whole-buffer read.
+propRequestFragments :: NonNegative Int -> [Positive Int] -> Property
+propRequestFragments (NonNegative padding) widths = ioProperty $ do
+  let target = "/" <> B.replicate (((padding `mod` 8178)*83) `mod` 8178) 97
+      wire = "POST " <> target <> " HTTP/1.1\r\nHost: localhost\r\nContent-Length: 3\r\n\r\nabc" <> base
+      split _ bytes | B.null bytes = []
+      split [] bytes = let (front,rest)=B.splitAt 7 bytes in front:split [] rest
+      split (Positive n:ns) bytes = let (front,rest)=B.splitAt (1+n `mod` 1024) bytes in front:split ns rest
+  ref <- newIORef (split widths wire)
+  fragmented <- newReader (atomicModifyIORef' ref (\xs -> case xs of [] -> ([],B.empty); x:rest -> (rest,x)))
+  whole <- readerOf (B.length wire) wire
+  first <- readRequest fragmented
+  expected <- readRequest whole
+  body <- collectBody fragmented (reqFraming first) 3
+  expectedBody <- collectBody whole (reqFraming expected) 3
+  next <- readRequest fragmented
+  expectedNext <- readRequest whole
+  pure (first == expected && body == expectedBody && body == "abc" && next == expectedNext)

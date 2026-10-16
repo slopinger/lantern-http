@@ -28,3 +28,11 @@ test-suite representation
   build-depends: base, lantern-http, bytestring, time, QuickCheck
   ghc-options: -Wall
   default-language: Haskell2010
+
+benchmark fragmented
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is: Fragmented.hs
+  build-depends: base, lantern-http, bytestring
+  ghc-options: -Wall -O2 -rtsopts
+  default-language: Haskell2010
