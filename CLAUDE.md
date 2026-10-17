@@ -34,3 +34,11 @@
   docs/target-scan.md and JSON preserve three alternating revision pairs using
   the unchanged benchmark helper. These are long-target parser CPU/allocation
   observations, not ordinary-request/whole-server throughput or peak memory.
+
+`readRequestMaybe` returns Nothing only for transport EOF before any next-request
+byte. It preserves buffered/pipelined data and the strict readRequest grammar;
+partial headers/lines and backend exceptions still fail. Consume the previous
+body first and retain caller deadlines. TLS callers must supply authenticated
+EOF from their TLS transport; this helper does not establish TLS closure itself.
+Tests cover every proper nonempty prefix of a valid request across six fragment
+widths, clean initial/pipeline boundaries and backend error propagation.

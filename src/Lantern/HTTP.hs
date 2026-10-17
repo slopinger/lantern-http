@@ -3,7 +3,7 @@
 -- | Lantern's HTTP/1 wire implementation. No HTTP framework or client library.
 module Lantern.HTTP
   ( Headers, Reader, ProtocolError(..), Request(..), ResponseHead(..), Framing(..)
-  , newReader, readRequest, readResponse, readBody, collectBody, framing
+  , newReader, readRequest, readRequestMaybe, readResponse, readBody, collectBody, framing
   , header, values, tokens, lower, trim, validToken, connectionClose
   , writeHead, chunk, stripHop, decimal, failHTTP
   ) where
@@ -124,6 +124,18 @@ framing isRequest hs = do
              | otherwise -> failHTTP 501 "unsupported transfer coding"
     ([],[]) -> pure (if isRequest then NoBody else UntilClose)
     _ -> failHTTP 400 "invalid framing"
+
+-- | Clean connection EOF is allowed only before any byte of the next request.
+-- Partial request EOF remains a protocol error. Caller must consume the previous
+-- body before calling this, use one reader, and close on any parse/I/O failure.
+readRequestMaybe :: Reader -> IO (Maybe Request)
+readRequestMaybe r@(Reader recv ref) = do
+  buffered <- readIORef ref
+  if not (B.null buffered) then Just <$> readRequest r else do
+    first <- recv
+    if B.null first then pure Nothing else do
+      writeIORef ref first
+      Just <$> readRequest r
 
 readRequest :: Reader -> IO Request
 readRequest r = do

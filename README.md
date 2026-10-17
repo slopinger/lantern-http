@@ -80,3 +80,11 @@ Request-target validation scans the original ByteString with checked indices,
 avoiding a per-byte list while retaining the same grammar and raw escapes.
 [Target-scan measurements](docs/target-scan.md) use the existing long-request
 helper and retain every before/after trial.
+
+`readRequestMaybe` returns Nothing only for transport EOF before any next-request
+byte. It preserves buffered/pipelined data and the strict readRequest grammar;
+partial headers/lines and backend exceptions still fail. Consume the previous
+body first and retain caller deadlines. TLS callers must supply authenticated
+EOF from their TLS transport; this helper does not establish TLS closure itself.
+Tests cover every proper nonempty prefix of a valid request across six fragment
+widths, clean initial/pipeline boundaries and backend error propagation.

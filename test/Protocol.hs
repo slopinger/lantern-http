@@ -28,6 +28,27 @@ base = "GET /hello?q=1 HTTP/1.1\r\nHost: localhost\r\n\r\n"
 
 main :: IO ()
 main = do
+  -- EOF is clean at a request boundary only, for every transport fragmentation.
+  forM_ [1,2,3,32,128,16384] $ \width -> do
+    empty <- readerOf width B.empty
+    boundary <- readRequestMaybe empty
+    assertTest "initial boundary EOF" (boundary == Nothing)
+    r <- readerOf width (base <> base)
+    first <- readRequestMaybe r
+    second <- readRequestMaybe r
+    end <- readRequestMaybe r
+    assertTest "optional reader preserves pipeline" (first == second && first /= Nothing && end == Nothing)
+    forM_ [1..B.length base-1] $ \count -> do
+      partial <- readerOf width (B.take count base)
+      result <- try (readRequestMaybe partial)
+      case result of
+        Left (_ :: ProtocolError) -> pure ()
+        Right _ -> fail "partial request EOF treated as clean boundary"
+  broken <- newReader (throwIO (userError "backend failure"))
+  failure <- try (readRequestMaybe broken)
+  case failure of
+    Left (_ :: IOException) -> pure ()
+    Right _ -> fail "backend failure treated as clean EOF"
   forM_ [1..128] $ \n -> do
     r <- readerOf n (base <> "POST / HTTP/1.1\r\nHost: localhost\r\nContent-Length: 5\r\n\r\nhello" <> base)
     a <- readRequest r
