@@ -128,6 +128,10 @@ main = do
       accepted <- readResponse good "GET"
       actualBody <- collectBody good (resFraming accepted) 3
       assertTest "valid version/framing response" (resFraming accepted == expected && actualBody == "abc")
+  upgraded <- readerOf 16384 "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n\x81\x02hi"
+  switched <- readResponseUpgrade upgraded "GET"
+  early <- readChunk upgraded
+  assertTest "upgrade preserves coalesced protocol bytes" (resStatus switched == 101 && resFraming switched == NoBody && early == "\x81\x02hi")
   assertTest "hop stripping" (stripHop [("connection","x-private"),("x-private","secret"),("ok","yes")] == [("ok","yes")])
   result <- quickCheckWithResult stdArgs {maxSuccess=3000} propFragmentation
   unless (isSuccess result) exitFailure

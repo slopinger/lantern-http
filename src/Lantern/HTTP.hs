@@ -3,7 +3,7 @@
 -- | Lantern's HTTP/1 wire implementation. No HTTP framework or client library.
 module Lantern.HTTP
   ( Headers, Reader, ProtocolError(..), Request(..), ResponseHead(..), Framing(..)
-  , newReader, readRequest, readRequestMaybe, readResponse, readBody, collectBody, framing
+  , newReader, readRequest, readRequestMaybe, readResponse, readResponseUpgrade, readChunk, readBody, collectBody, framing
   , header, values, tokens, lower, trim, validToken, connectionClose
   , writeHead, chunk, stripHop, decimal, failHTTP
   ) where
@@ -173,7 +173,22 @@ validTarget bytes = go 0
     hex c = (c >= 48 && c <= 57) || (c >= 65 && c <= 70) || (c >= 97 && c <= 102)
 
 readResponse :: Reader -> B.ByteString -> IO ResponseHead
-readResponse r method = go (0 :: Int)
+readResponse = readResponseMode False
+
+-- | Explicit upgrade parser: only callers validating the upgraded protocol may
+-- use a returned 101 and then readChunk. Ordinary readResponse still rejects it.
+readResponseUpgrade :: Reader -> B.ByteString -> IO ResponseHead
+readResponseUpgrade = readResponseMode True
+
+-- | Transfer unread bytes to an upgraded protocol before receiving more. Never
+-- resume HTTP parsing on this reader after a successful protocol switch.
+readChunk :: Reader -> IO B.ByteString
+readChunk (Reader recv ref) = do
+  buffered <- atomicModifyIORef' ref (\bytes -> (B.empty,bytes))
+  if B.null buffered then recv else pure buffered
+
+readResponseMode :: Bool -> Reader -> B.ByteString -> IO ResponseHead
+readResponseMode upgrading r method = go (0 :: Int)
   where
     go interim = do
       when (interim >= 8) $ failHTTP 502 "too many informational responses"
@@ -191,9 +206,9 @@ readResponse r method = go (0 :: Int)
       f <- framing False hs
       when ((code < 200 || code == 204) && (not (null (values "content-length" hs)) || not (null (values "transfer-encoding" hs)))) $
         failHTTP 502 "framing forbidden for this upstream status"
-      when (code == 101) $ failHTTP 502 "upstream protocol upgrade unsupported"
-      if code < 200 then go (interim + 1) else
-        pure (ResponseHead code hs (if method == "HEAD" || code `elem` [204,304] then NoBody else f))
+      when (code == 101 && (not upgrading || version /= "HTTP/1.1")) $ failHTTP 502 "upstream protocol upgrade unsupported"
+      if code < 200 && code /= 101 then go (interim + 1) else
+        pure (ResponseHead code hs (if method == "HEAD" || code `elem` [101,204,304] then NoBody else f))
 
 -- Bounded pieces, not read(n) into an attacker-sized allocation.
 takeBytes :: Reader -> Integer -> (B.ByteString -> IO ()) -> IO ()

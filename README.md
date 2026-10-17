@@ -102,3 +102,9 @@ offers, an empty field only identity. Wildcard exclusions and explicit preferenc
 are honored; malformed/duplicate values or more than 128 items fail. No codecs
 or transport dependencies are added. Existing representation checks cover normal
 weighting, identity, exclusion and an invalid value without another test suite.
+
+Explicit protocol upgrades use readResponseUpgrade, which permits HTTP/1.1 101
+without framing fields; callers must validate the upgraded handshake. Ordinary
+readResponse keeps rejecting 101. readChunk transfers any unread coalesced bytes
+before the next backend receive; callers must not resume HTTP parsing after a
+switch. Existing protocol checks cover 101 plus an early frame in one read.
