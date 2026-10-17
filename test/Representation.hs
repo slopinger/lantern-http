@@ -5,6 +5,7 @@ import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as C
 import Data.List (sort)
 import Data.Time
+import Lantern.HTTP.Encoding (encodingPreferences)
 import Lantern.HTTP.Representation
 import System.Exit (exitFailure)
 import Test.QuickCheck
@@ -20,6 +21,12 @@ validators=Validators (Just (Strong "current")) (Just old) True
 
 main :: IO ()
 main=do
+  let offered=["br","gzip","identity"]
+  check "encoding weights" (encodingPreferences offered [("accept-encoding","gzip;q=0.7, br;q=0.3")] == Right ["gzip","br","identity"])
+  check "encoding exclusion" (encodingPreferences offered [("accept-encoding","*;q=0")] == Right [])
+  check "encoding identity preference" (encodingPreferences offered [("accept-encoding","gzip;q=0.5, identity;q=1")] == Right ["identity","gzip"])
+  check "empty encoding field" (encodingPreferences offered [("accept-encoding","")] == Right ["identity"])
+  check "invalid encoding weight" (case encodingPreferences offered [("accept-encoding","gzip;q=2")] of Left _ -> True; _ -> False)
   forM_ ["Sun, 06 Nov 1994 05:49:37 GMT", "Sunday, 06-Nov-94 05:49:37 GMT", "Sun Nov  6 05:49:37 1994"] $ \date ->
     check "HTTP date forms" (parseHTTPDate now date==Just old)
   let future=UTCTime (fromGregorian 2075 1 1) 0

@@ -94,3 +94,11 @@ as faulty framing (502), before body suppression or informational skipping.
 HTTP/1.0 fixed/close-delimited responses and HTTP/1.1 chunked responses remain
 supported. Fragmented regressions cover GET, HEAD, 304 and informational status
 cases, alongside valid framing/body controls.
+
+Lantern.HTTP.Encoding exposes encodingPreferences for content-coding negotiation:
+rank supported names by bounded integer qvalues, server order on ties, identity
+fallback unless explicitly weighted/excluded. Absent Accept-Encoding accepts all
+offers, an empty field only identity. Wildcard exclusions and explicit preferences
+are honored; malformed/duplicate values or more than 128 items fail. No codecs
+or transport dependencies are added. Existing representation checks cover normal
+weighting, identity, exclusion and an invalid value without another test suite.
