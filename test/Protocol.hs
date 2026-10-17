@@ -111,6 +111,23 @@ main = do
   assertTest "interim response" (resStatus response == 200)
   body <- collectBody r (resFraming response) 10
   assertTest "response body" (body == "abc")
+  -- HTTP/1.0 transfer coding is faulty even when HEAD/304 would hide a body,
+  -- or an informational response would otherwise be skipped for a final head.
+  forM_ [1,2,3,32,16384] $ \width -> do
+    forM_ [("GET","200"),("HEAD","200"),("GET","304"),("GET","103")] $ \(method,status) -> do
+      bad <- readerOf width ("HTTP/1.0 " <> status <> " Test\r\nTransfer-Encoding: chunked\r\n\r\n" <>
+                             "0\r\n\r\nHTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+      outcome <- try (readResponse bad method)
+      case outcome of
+        Left (ProtocolError code _) -> assertTest "HTTP/1.0 transfer fault status" (code == 502)
+        Right _ -> fail "accepted HTTP/1.0 transfer encoding"
+    forM_ [("HTTP/1.0 200 OK\r\nContent-Length: 3\r\n\r\nabc", Fixed 3),
+           ("HTTP/1.0 200 OK\r\n\r\nabc", UntilClose),
+           ("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n3\r\nabc\r\n0\r\n\r\n", Chunked)] $ \(wire,expected) -> do
+      good <- readerOf width wire
+      accepted <- readResponse good "GET"
+      actualBody <- collectBody good (resFraming accepted) 3
+      assertTest "valid version/framing response" (resFraming accepted == expected && actualBody == "abc")
   assertTest "hop stripping" (stripHop [("connection","x-private"),("x-private","secret"),("ok","yes")] == [("ok","yes")])
   result <- quickCheckWithResult stdArgs {maxSuccess=3000} propFragmentation
   unless (isSuccess result) exitFailure

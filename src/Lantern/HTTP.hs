@@ -178,14 +178,16 @@ readResponse r method = go (0 :: Int)
     go interim = do
       when (interim >= 8) $ failHTTP 502 "too many informational responses"
       start <- line r 8192
-      code <- case C.split ' ' start of
+      (version,code) <- case C.split ' ' start of
         v:c:reasonWords | v `elem` ["HTTP/1.0","HTTP/1.1"] && B.length c == 3 &&
                      not (null reasonWords) && B.all (\x -> x >= 32 && x /= 127) (C.unwords reasonWords) ->
           case decimal c of
-            Just n | n >= 100 && n <= 599 -> pure (fromInteger n)
+            Just n | n >= 100 && n <= 599 -> pure (v,fromInteger n)
             _ -> failHTTP 502 "invalid upstream status"
         _ -> failHTTP 502 "invalid upstream status line"
       hs <- readHeaders r 32768 100
+      when (version == "HTTP/1.0" && not (null (values "transfer-encoding" hs))) $
+        failHTTP 502 "HTTP/1.0 transfer encoding"
       f <- framing False hs
       when ((code < 200 || code == 204) && (not (null (values "content-length" hs)) || not (null (values "transfer-encoding" hs)))) $
         failHTTP 502 "framing forbidden for this upstream status"

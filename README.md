@@ -88,3 +88,9 @@ body first and retain caller deadlines. TLS callers must supply authenticated
 EOF from their TLS transport; this helper does not establish TLS closure itself.
 Tests cover every proper nonempty prefix of a valid request across six fragment
 widths, clean initial/pipeline boundaries and backend error propagation.
+
+Responses with an HTTP/1.0 status line and any Transfer-Encoding are rejected
+as faulty framing (502), before body suppression or informational skipping.
+HTTP/1.0 fixed/close-delimited responses and HTTP/1.1 chunked responses remain
+supported. Fragmented regressions cover GET, HEAD, 304 and informational status
+cases, alongside valid framing/body controls.
