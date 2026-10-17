@@ -2,7 +2,7 @@
 
 An independent, experimental HTTP/1 wire library written in Haskell. Runtime
 dependencies: `base`, `bytestring`, and `time`. There is no HTTP server/client framework
-underneath it. MIT licensed. Used by [Lantern](https://git.freifick.net/slop/lantern).
+underneath it. MIT licensed. Used by [Lantern](https://github.com/slopinger/lantern).
 
 ```haskell
 reader <- newReader receiveBytes
